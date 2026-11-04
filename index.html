@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Folha de Obra</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f5f7fa;color:#1d2733;font-size:16px}
+header{background:#fff;border-bottom:3px solid #f2a900;padding:12px 16px;position:sticky;top:0;z-index:5}
+header h1{margin:0;font-size:1.2rem}main{max-width:1000px;margin:auto;padding:12px}
+section{background:#fff;border-radius:10px;padding:14px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+h2{font-size:1.05rem;margin:0 0 10px}label{display:block;font-size:.85rem;color:#556;margin-top:8px}
+input,select,textarea,button{font-size:16px;padding:10px;border:1px solid #ccd3dc;border-radius:8px;width:100%;font-family:inherit}
+textarea{min-height:60px}button{background:#1f6feb;color:#fff;border:none;cursor:pointer;width:auto;margin:4px 4px 4px 0}
+button.sec{background:#e8edf3;color:#1d2733}button.del{background:#d93025}button.kit{background:#f2a900;color:#222}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px}
+.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+table{width:100%;border-collapse:collapse;font-size:.92rem}th,td{padding:6px;border-bottom:1px solid #e5e9ef;text-align:left;vertical-align:top}
+th{background:#f0f3f7}td.n{text-align:right}.tot{font-weight:bold;margin-top:8px}
+.muted{color:#778;font-size:.85rem}
+@media(max-width:640px){table.resp thead{display:none}table.resp tr{display:block;border:1px solid #e5e9ef;border-radius:8px;margin-bottom:8px;padding:6px}table.resp td{display:flex;justify-content:space-between;border:none}table.resp td::before{content:attr(data-l);font-weight:600;color:#556;margin-right:8px}}
+@media print{header .row,.noprint,button{display:none!important}section{box-shadow:none;border:1px solid #ccc;page-break-inside:avoid}body{background:#fff}#printview{display:block!important}#app{display:none}}
+#printview{display:none}
+</style>
+</head>
+<body>
+<header><h1>☀️ Folha de Obra — Materiais e Tempos</h1></header>
+<main id="app">
+<section>
+ <h2>Obras</h2>
+ <div class="row"><select id="selObra" style="flex:1;min-width:200px"></select>
+ <button id="bNova">+ Nova obra</button><button class="del" id="bApagar">Apagar obra</button></div>
+ <div id="obraForm" class="grid">
+  <div><label>Nome da obra / cliente</label><input id="fNome"></div>
+  <div><label>Morada</label><input id="fMorada"></div>
+  <div><label>Data início</label><input type="date" id="fIni"></div>
+  <div><label>Data fim</label><input type="date" id="fFim"></div>
+ </div>
+ <label>Notas</label><textarea id="fNotas"></textarea>
+</section>
+<section>
+ <h2>Materiais</h2>
+ <div class="row">
+  <button class="kit" data-kit="inv">+ Kit inversor MultiPlus-II 48/15000 trifásico</button>
+  <button class="kit" data-kit="est">+ Estrutura 16 painéis (2x8)</button>
+  <button class="kit" data-kit="cab">+ Cabos e acessórios</button>
+ </div>
+ <div class="grid">
+  <div><label>Artigo</label><input id="mArt" list="artigos"></div>
+  <div><label>Categoria</label><select id="mCat"></select></div>
+  <div><label>Quantidade</label><input id="mQtd" type="number" step="any" inputmode="decimal"></div>
+  <div><label>Unidade</label><select id="mUn"></select></div>
+  <div><label>Notas</label><input id="mNotas"></div>
+ </div>
+ <button id="bAddMat">Adicionar material</button><button class="sec" id="bCancMat" style="display:none">Cancelar edição</button>
+ <datalist id="artigos"></datalist>
+ <table class="resp"><thead><tr><th>Artigo</th><th>Categoria</th><th>Qtd</th><th>Un.</th><th>Notas</th><th></th></tr></thead><tbody id="tMat"></tbody></table>
+</section>
+<section>
+ <h2>Tempo de execução</h2>
+ <div class="grid">
+  <div><label>Data</label><input type="date" id="tData"></div>
+  <div><label>Pessoa / equipa</label><input id="tPessoa"></div>
+  <div><label>Nº de pessoas</label><input type="number" min="1" id="tN" value="1" inputmode="numeric"></div>
+  <div><label>Hora início</label><input type="time" id="tIni"></div>
+  <div><label>Hora fim</label><input type="time" id="tFim"></div>
+  <div><label>Tarefa / notas</label><input id="tNotas"></div>
+ </div>
+ <div class="muted" id="tPrev"></div>
+ <button id="bAddTempo">Adicionar registo</button><button class="sec" id="bCancTempo" style="display:none">Cancelar edição</button>
+ <table class="resp"><thead><tr><th>Data</th><th>Pessoa/equipa</th><th>Nº</th><th>Início</th><th>Fim</th><th>Horas</th><th>H-homem</th><th>Tarefa</th><th></th></tr></thead><tbody id="tTempo"></tbody></table>
+ <div class="tot" id="tTot"></div>
+</section>
+<section>
+ <h2>Resumo da obra</h2><div id="resumo"></div>
+</section>
+<section>
+ <h2>Exportar / Importar</h2>
+ <div class="row">
+  <button id="eObraJ">Exportar obra (JSON)</button><button id="eObraC">Exportar obra (CSV)</button>
+  <button id="eTudoJ">Exportar tudo (JSON)</button><button id="eTudoC">Exportar tudo (CSV)</button>
+  <button id="bShare">Partilhar</button><button class="sec" id="bPrint">Imprimir</button>
+  <button class="sec" id="bImp">Importar JSON</button><input type="file" id="fImp" accept=".json,application/json" style="display:none">
+ </div>
+ <p class="muted">Link direto para uma obra: <code>folha-de-obra.html#obra=Nome&amp;morada=...&amp;inicio=AAAA-MM-DD&amp;kits=inversor15000,estrutura16,cabos</code> — cria a obra com os kits se ainda não existir.</p>
+ <p class="muted">Os dados ficam guardados neste dispositivo (navegador). Exporte regularmente como cópia de segurança.</p>
+</section>
+</main>
+<div id="printview"></div>
+<script>
+(function(){
+"use strict";
+var KEY="folhaObra.v1",SCHEMA=1;
+var CATS=["Inversor","Estrutura","Cabos","Acessórios","Proteções","Outro"],UNS=["un","m","conj.","kg"];
+var ART=[["Victron MultiPlus-II 48/5000","Inversor","un"],["Victron Cerbo GX MK2","Inversor","un"],["Barramento Lynx Power In","Acessórios","un"],["SF463","Proteções","un"],["Corte 4P 40A Hager SBN440","Proteções","un"],["Cabo cobre 35 mm² (m)","Cabos","m"],["Terminal olhal 35 furo 8","Acessórios","un"],["Fio FV 1x35 mm² (m)","Cabos","m"],["S10","Estrutura","un"],["S11","Estrutura","un"],["Perfil G1 Sunfer","Estrutura","un"],["Apoio S02.3","Estrutura","un"],["União UG1","Estrutura","un"],["Ficha MC4 Stäubli","Acessórios","un"],["Y Stäubli (conj.)","Acessórios","conj."],["Quadro Hensel 2x12","Proteções","un"],["Cabo RV-K 5G6 (m)","Cabos","m"],["Calha 110x50 (m)","Acessórios","m"],["Ponteira 6 mm","Acessórios","un"],["Cabo solar 6 mm² (m)","Cabos","m"],["Cabo solar 4 mm² (m)","Cabos","m"],["Abraçadeira nylon","Acessórios","un"],["Braçadeira metálica p/ tubo","Acessórios","un"],["Bucha + parafuso","Acessórios","un"],["Tubo VD 25 mm (m)","Acessórios","m"],["Tubo ondulado 25 mm (m)","Acessórios","m"],["Cabo terra 6 mm² verde-amarelo (m)","Cabos","m"],["Terminal olhal 6 mm²","Acessórios","un"],["Cabo solar 6 mm² vermelho (m)","Cabos","m"],["Cabo solar 6 mm² preto (m)","Cabos","m"],["Cabo terra 16 mm² verde-amarelo (m)","Cabos","m"],["Abraçadeira UV p/ estrutura","Acessórios","un"]];
+var S="sugestão";
+var KITS={inv:[[0,3],[1,1],[2,1],[3,1],[4,1],[6,12],[7,6],[5,0],[30,0,S]],est:[[8,8],[9,30],[14,2],[13,8],[10,8],[11,24],[12,4],[28,0,S],[29,0,S],[31,30,S]],cab:[[15,1],[16,20],[17,6],[18,30],[21,50,S],[22,20,S],[23,20,S],[24,0,S],[25,0,S],[26,0,S],[27,10,S]]};
+var KITALIAS={inversor15000:"inv",inversor:"inv",inv:"inv",estrutura16:"est",estrutura:"est",est:"est",cabos:"cab",cab:"cab"};
+function addKit(o,k){KITS[k].forEach(function(e){var a=ART[e[0]];o.materiais.push({id:uid(),artigo:a[0],categoria:a[1],quantidade:e[1],unidade:a[2],notas:e[2]||(e[1]===0?"preencher":"")})})}
+var $=function(i){return document.getElementById(i)};
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function load(){try{var d=JSON.parse(localStorage.getItem(KEY));if(d&&d.obras)return d}catch(e){}return{obras:[],atual:null}}
+var st=load();
+function save(){try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){alert("Não foi possível guardar: "+e.message)}}
+function novaObra(nome){var o={id:uid(),nome:nome||"Nova obra",morada:"",dataInicio:"",dataFim:"",notas:"",materiais:[],tempos:[],criado:new Date().toISOString(),atualizado:new Date().toISOString()};st.obras.push(o);st.atual=o.id;save();return o}
+function cur(){var o=st.obras.find(function(x){return x.id===st.atual});if(!o){o=st.obras[0]||novaObra("Obra 1");st.atual=o.id}return o}
+function touch(){cur().atualizado=new Date().toISOString();save()}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function num(n){return (Math.round(n*100)/100).toLocaleString("pt-PT")}
+function horas(i,f){if(!i||!f)return 0;var a=i.split(":"),b=f.split(":");var m=(+b[0]*60+ +b[1])-(+a[0]*60+ +a[1]);if(m<0)m+=1440;return m/60}
+function opts(sel,arr){sel.innerHTML=arr.map(function(x){return"<option>"+esc(x)+"</option>"}).join("")}
+opts($("mCat"),CATS);opts($("mUn"),UNS);
+$("artigos").innerHTML=ART.map(function(a){return'<option value="'+esc(a[0])+'">'}).join("");
+$("mArt").addEventListener("change",function(){var a=ART.find(function(x){return x[0]===this.value},this);if(a){$("mCat").value=a[1];$("mUn").value=a[2]}});
+var editMat=null,editTempo=null;
+function render(){
+ var o=cur();
+ $("selObra").innerHTML=st.obras.map(function(x){return'<option value="'+x.id+'"'+(x.id===o.id?" selected":"")+">"+esc(x.nome||"(sem nome)")+"</option>"}).join("");
+ $("fNome").value=o.nome;$("fMorada").value=o.morada;$("fIni").value=o.dataInicio;$("fFim").value=o.dataFim;$("fNotas").value=o.notas;
+ $("tMat").innerHTML=o.materiais.map(function(m){return"<tr><td data-l='Artigo'>"+esc(m.artigo)+"</td><td data-l='Categoria'>"+esc(m.categoria)+"</td><td data-l='Qtd' class='n'>"+num(m.quantidade)+"</td><td data-l='Un.'>"+esc(m.unidade)+"</td><td data-l='Notas'>"+esc(m.notas)+"</td><td><button class='sec' data-em='"+m.id+"'>Editar</button><button class='del' data-dm='"+m.id+"'>✕</button></td></tr>"}).join("")||"<tr><td colspan=6 class='muted'>Sem materiais.</td></tr>";
+ var th=0,dias={};
+ $("tTempo").innerHTML=o.tempos.map(function(t){th+=t.horasHomem;if(t.data)dias[t.data]=1;return"<tr><td data-l='Data'>"+esc(t.data)+"</td><td data-l='Pessoa/equipa'>"+esc(t.pessoa)+"</td><td data-l='Nº'>"+t.nPessoas+"</td><td data-l='Início'>"+esc(t.horaInicio)+"</td><td data-l='Fim'>"+esc(t.horaFim)+"</td><td data-l='Horas' class='n'>"+num(t.horas)+"</td><td data-l='H-homem' class='n'>"+num(t.horasHomem)+"</td><td data-l='Tarefa'>"+esc(t.notas)+"</td><td><button class='sec' data-et='"+t.id+"'>Editar</button><button class='del' data-dt='"+t.id+"'>✕</button></td></tr>"}).join("")||"<tr><td colspan=9 class='muted'>Sem registos.</td></tr>";
+ var nd=Object.keys(dias).length;
+ $("tTot").textContent="Total: "+num(th)+" horas-homem · "+nd+" dia(s) de trabalho · ≈ "+num(th/8)+" dias-homem (8 h)";
+ $("resumo").innerHTML=resumoHTML(o);
+}
+function totais(o){var r={};o.materiais.forEach(function(m){var k=m.artigo+"|"+m.unidade;if(!r[k])r[k]={artigo:m.artigo,categoria:m.categoria,unidade:m.unidade,quantidade:0};r[k].quantidade+=+m.quantidade||0});return Object.keys(r).map(function(k){return r[k]}).sort(function(a,b){return CATS.indexOf(a.categoria)-CATS.indexOf(b.categoria)||a.artigo.localeCompare(b.artigo)})}
+function resumoTempo(o){var h=0,d={};o.tempos.forEach(function(t){h+=t.horasHomem;if(t.data)d[t.data]=1});return{totalHorasHomem:Math.round(h*100)/100,diasTrabalho:Object.keys(d).length}}
+function resumoHTML(o){var t=totais(o),r=resumoTempo(o);return"<table><thead><tr><th>Artigo</th><th>Categoria</th><th>Total</th><th>Un.</th></tr></thead><tbody>"+(t.map(function(x){return"<tr><td>"+esc(x.artigo)+"</td><td>"+esc(x.categoria)+"</td><td class='n'>"+num(x.quantidade)+"</td><td>"+esc(x.unidade)+"</td></tr>"}).join("")||"<tr><td colspan=4 class='muted'>—</td></tr>")+"</tbody></table><p class='tot'>Total horas-homem: "+num(r.totalHorasHomem)+" · Dias de trabalho: "+r.diasTrabalho+"</p>"}
+// obra fields
+[["fNome","nome"],["fMorada","morada"],["fIni","dataInicio"],["fFim","dataFim"],["fNotas","notas"]].forEach(function(p){$(p[0]).addEventListener("input",function(){cur()[p[1]]=this.value;touch();if(p[1]==="nome"){var op=$("selObra").selectedOptions[0];if(op)op.textContent=this.value||"(sem nome)"}})});
+$("selObra").onchange=function(){st.atual=this.value;save();render()};
+$("bNova").onclick=function(){var n=prompt("Nome da obra / cliente:");if(n===null)return;novaObra(n.trim()||"Nova obra");render()};
+$("bApagar").onclick=function(){var o=cur();if(!confirm('Apagar a obra "'+o.nome+'" e todos os registos?'))return;st.obras=st.obras.filter(function(x){return x.id!==o.id});st.atual=st.obras[0]?st.obras[0].id:null;save();render()};
+// materiais
+function clrMat(){editMat=null;$("mArt").value="";$("mQtd").value="";$("mNotas").value="";$("bAddMat").textContent="Adicionar material";$("bCancMat").style.display="none"}
+$("bAddMat").onclick=function(){var a=$("mArt").value.trim();if(!a){alert("Indique o artigo.");return}var o=cur(),m={artigo:a,categoria:$("mCat").value,quantidade:parseFloat(String($("mQtd").value).replace(",","."))||0,unidade:$("mUn").value,notas:$("mNotas").value};
+ if(editMat){Object.assign(o.materiais.find(function(x){return x.id===editMat}),m)}else{m.id=uid();o.materiais.push(m)}touch();clrMat();render()};
+$("bCancMat").onclick=clrMat;
+$("tMat").onclick=function(e){var o=cur(),id;if(id=e.target.getAttribute("data-dm")){if(confirm("Apagar esta linha?")){o.materiais=o.materiais.filter(function(x){return x.id!==id});touch();render()}}else if(id=e.target.getAttribute("data-em")){var m=o.materiais.find(function(x){return x.id===id});editMat=id;$("mArt").value=m.artigo;$("mCat").value=m.categoria;$("mQtd").value=m.quantidade;$("mUn").value=m.unidade;$("mNotas").value=m.notas;$("bAddMat").textContent="Guardar alteração";$("bCancMat").style.display="";$("mQtd").focus()}};
+Array.prototype.forEach.call(document.querySelectorAll("[data-kit]"),function(b){b.onclick=function(){var o=cur();addKit(o,b.getAttribute("data-kit"));touch();render()}});
+// tempos
+function prevT(){var h=horas($("tIni").value,$("tFim").value),n=+$("tN").value||1;$("tPrev").textContent=h?num(h)+" h × "+n+" pessoa(s) = "+num(h*n)+" horas-homem":""}
+["tIni","tFim","tN"].forEach(function(i){$(i).addEventListener("input",prevT)});
+function clrT(){editTempo=null;$("tIni").value="";$("tFim").value="";$("tNotas").value="";$("bAddTempo").textContent="Adicionar registo";$("bCancTempo").style.display="none";prevT()}
+$("tData").value=new Date().toISOString().slice(0,10);
+$("bAddTempo").onclick=function(){var i=$("tIni").value,f=$("tFim").value;if(!i||!f){alert("Indique hora de início e fim.");return}var n=Math.max(1,parseInt($("tN").value)||1),h=horas(i,f);
+ var t={data:$("tData").value,pessoa:$("tPessoa").value,nPessoas:n,horaInicio:i,horaFim:f,horas:Math.round(h*100)/100,horasHomem:Math.round(h*n*100)/100,notas:$("tNotas").value},o=cur();
+ if(editTempo){Object.assign(o.tempos.find(function(x){return x.id===editTempo}),t)}else{t.id=uid();o.tempos.push(t)}o.tempos.sort(function(a,b){return(a.data+a.horaInicio).localeCompare(b.data+b.horaInicio)});touch();clrT();render()};
+$("bCancTempo").onclick=clrT;
+$("tTempo").onclick=function(e){var o=cur(),id;if(id=e.target.getAttribute("data-dt")){if(confirm("Apagar este registo?")){o.tempos=o.tempos.filter(function(x){return x.id!==id});touch();render()}}else if(id=e.target.getAttribute("data-et")){var t=o.tempos.find(function(x){return x.id===id});editTempo=id;$("tData").value=t.data;$("tPessoa").value=t.pessoa;$("tN").value=t.nPessoas;$("tIni").value=t.horaInicio;$("tFim").value=t.horaFim;$("tNotas").value=t.notas;$("bAddTempo").textContent="Guardar alteração";$("bCancTempo").style.display="";prevT()}};
+// export
+function pack(obras){return{app:"folha-de-obra",schemaVersion:SCHEMA,exportadoEm:new Date().toISOString(),obras:obras.map(function(o){return Object.assign({},o,{resumo:{materiais:totais(o),tempo:resumoTempo(o)}})})}}
+function csvq(v){v=v==null?"":String(v);return/[";\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}
+function csv(obras){var L=["sep=;","MATERIAIS","obra;morada;artigo;categoria;quantidade;unidade;notas"];obras.forEach(function(o){o.materiais.forEach(function(m){L.push([o.nome,o.morada,m.artigo,m.categoria,String(m.quantidade).replace(".",","),m.unidade,m.notas].map(csvq).join(";"))})});
+ L.push("","TEMPOS","obra;data;pessoa_equipa;n_pessoas;hora_inicio;hora_fim;horas;horas_homem;tarefa_notas");obras.forEach(function(o){o.tempos.forEach(function(t){L.push([o.nome,t.data,t.pessoa,t.nPessoas,t.horaInicio,t.horaFim,String(t.horas).replace(".",","),String(t.horasHomem).replace(".",","),t.notas].map(csvq).join(";"))})});return"\ufeff"+L.join("\r\n")}
+function fname(base,ext){return base.replace(/[^\w\-]+/g,"_").slice(0,40)+"_"+new Date().toISOString().slice(0,10)+"."+ext}
+function dl(name,text,type){var b=new Blob([text],{type:type}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},1000)}
+$("eObraJ").onclick=function(){var o=cur();dl(fname("obra_"+o.nome,"json"),JSON.stringify(pack([o]),null,2),"application/json")};
+$("eObraC").onclick=function(){var o=cur();dl(fname("obra_"+o.nome,"csv"),csv([o]),"text/csv")};
+$("eTudoJ").onclick=function(){dl(fname("todas_obras","json"),JSON.stringify(pack(st.obras),null,2),"application/json")};
+$("eTudoC").onclick=function(){dl(fname("todas_obras","csv"),csv(st.obras),"text/csv")};
+$("bShare").onclick=function(){var all=st.obras.length>1&&confirm("Partilhar TODAS as obras? (Cancelar = só a obra atual)");var obras=all?st.obras:[cur()];var name=fname(all?"todas_obras":"obra_"+cur().nome,"json"),txt=JSON.stringify(pack(obras),null,2);
+ try{var f=new File([txt],name,{type:"application/json"});if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f],title:"Folha de obra",text:"Dados de obra: "+name}).catch(function(e){if(e.name!=="AbortError")dl(name,txt,"application/json")});return}}catch(e){}
+ dl(name,txt,"application/json");alert("Partilha não disponível neste navegador — o ficheiro foi descarregado.")};
+$("bImp").onclick=function(){$("fImp").click()};
+$("fImp").onchange=function(){var f=this.files[0];if(!f)return;var r=new FileReader();r.onload=function(){try{var d=JSON.parse(r.result);var obras=d.obras||(d.id?[d]:null);if(!obras)throw new Error("formato inválido");var subs=confirm("OK = juntar (obras com o mesmo id são substituídas)\nCancelar = não importar");if(!subs)return;var n=0;obras.forEach(function(o){delete o.resumo;o.materiais=o.materiais||[];o.tempos=o.tempos||[];if(!o.id)o.id=uid();var i=st.obras.findIndex(function(x){return x.id===o.id});if(i>=0)st.obras[i]=o;else st.obras.push(o);n++});st.atual=obras[0].id;save();render();alert(n+" obra(s) importada(s).")}catch(e){alert("Erro ao importar: "+e.message)}};r.readAsText(f);this.value=""};
+$("bPrint").onclick=function(){var o=cur();$("printview").innerHTML="<h1>Folha de Obra</h1><p><b>"+esc(o.nome)+"</b><br>"+esc(o.morada)+"<br>Início: "+esc(o.dataInicio)+" · Fim: "+esc(o.dataFim)+"</p><p>"+esc(o.notas)+"</p><h2>Materiais (totais)</h2>"+resumoHTML(o)+"<h2>Tempos</h2><table><thead><tr><th>Data</th><th>Pessoa</th><th>Nº</th><th>Início</th><th>Fim</th><th>H-homem</th><th>Tarefa</th></tr></thead><tbody>"+o.tempos.map(function(t){return"<tr><td>"+esc(t.data)+"</td><td>"+esc(t.pessoa)+"</td><td>"+t.nPessoas+"</td><td>"+esc(t.horaInicio)+"</td><td>"+esc(t.horaFim)+"</td><td>"+num(t.horasHomem)+"</td><td>"+esc(t.notas)+"</td></tr>"}).join("")+"</tbody></table>";window.print()};
+// Abrir por link: #obra=Nome&morada=...&inicio=AAAA-MM-DD&fim=...&notas=...&kits=inversor15000,estrutura16,cabos
+function fromHash(){var h=(location.hash||"").replace(/^#/,"")||(location.search||"").replace(/^\?/,"");if(!h)return;var q={};h.split("&").forEach(function(kv){var i=kv.indexOf("=");if(i<0)return;try{q[decodeURIComponent(kv.slice(0,i))]=decodeURIComponent(kv.slice(i+1).replace(/\+/g," "))}catch(e){}});if(!q.obra)return;
+ var ex=st.obras.find(function(x){return x.nome.trim().toLowerCase()===q.obra.trim().toLowerCase()});if(ex){st.atual=ex.id;save();return}
+ var o=novaObra(q.obra);o.morada=q.morada||"";o.dataInicio=q.inicio||"";o.dataFim=q.fim||"";o.notas=q.notas||"";
+ (q.kits||"").split(",").forEach(function(k){k=KITALIAS[k.trim().toLowerCase()];if(k)addKit(o,k)});save()}
+fromHash();
+render();
+window.__folha={st:st,cur:cur,pack:pack,csv:csv};
+})();
+</script>
+</body>
+</html>
