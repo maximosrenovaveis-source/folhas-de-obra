@@ -73,6 +73,8 @@ th{background:#f0f3f7}td.n{text-align:right}.tot{font-weight:bold;margin-top:8px
 </section>
 <section>
  <h2>Resumo da obra</h2><div id="resumo"></div>
+ <button id="bGestor" style="width:100%;font-size:1.1em;padding:14px;margin-top:10px">📧 Enviar ao Gestor</button>
+ <p class="muted">Abre um email já preenchido com os registos desta obra para maximosrenovaveis@gmail.com. Só tem de carregar em Enviar.</p>
 </section>
 <section>
  <h2>Exportar / Importar</h2>
@@ -163,6 +165,13 @@ $("eTudoC").onclick=function(){dl(fname("todas_obras","csv"),csv(st.obras),"text
 $("bShare").onclick=function(){var all=st.obras.length>1&&confirm("Partilhar TODAS as obras? (Cancelar = só a obra atual)");var obras=all?st.obras:[cur()];var name=fname(all?"todas_obras":"obra_"+cur().nome,"json"),txt=JSON.stringify(pack(obras),null,2);
  try{var f=new File([txt],name,{type:"application/json"});if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f],title:"Folha de obra",text:"Dados de obra: "+name}).catch(function(e){if(e.name!=="AbortError")dl(name,txt,"application/json")});return}}catch(e){}
  dl(name,txt,"application/json");alert("Partilha não disponível neste navegador — o ficheiro foi descarregado.")};
+$("bGestor").onclick=function(){var o=cur(),t=totais(o),r=resumoTempo(o);
+ var L=["FOLHA DE OBRA - "+o.nome,"Morada: "+(o.morada||"-"),"Início: "+(o.dataInicio||"-")+" | Fim: "+(o.dataFim||"-"),o.notas?"Notas: "+o.notas:"","","MATERIAIS (totais)"];
+ t.forEach(function(x){L.push("- "+x.artigo+": "+num(x.quantidade)+" "+x.unidade)});
+ L.push("","TEMPOS");o.tempos.forEach(function(x){L.push("- "+x.data+" "+(x.pessoa||"")+" x"+x.nPessoas+" "+x.horaInicio+"-"+x.horaFim+" = "+num(x.horasHomem)+" h-homem "+(x.notas||""))});
+ L.push("Total horas-homem: "+num(r.totalHorasHomem)+" | Dias: "+r.diasTrabalho,"","--- DADOS (não apagar) ---",JSON.stringify(pack([o])),"--- FIM ---");
+ var url="mailto:maximosrenovaveis@gmail.com?subject="+encodeURIComponent("Folha de obra - "+o.nome+" - "+new Date().toISOString().slice(0,10))+"&body="+encodeURIComponent(L.join("\n"));
+ location.href=url};
 $("bImp").onclick=function(){$("fImp").click()};
 $("fImp").onchange=function(){var f=this.files[0];if(!f)return;var r=new FileReader();r.onload=function(){try{var d=JSON.parse(r.result);var obras=d.obras||(d.id?[d]:null);if(!obras)throw new Error("formato inválido");var subs=confirm("OK = juntar (obras com o mesmo id são substituídas)\nCancelar = não importar");if(!subs)return;var n=0;obras.forEach(function(o){delete o.resumo;o.materiais=o.materiais||[];o.tempos=o.tempos||[];if(!o.id)o.id=uid();var i=st.obras.findIndex(function(x){return x.id===o.id});if(i>=0)st.obras[i]=o;else st.obras.push(o);n++});st.atual=obras[0].id;save();render();alert(n+" obra(s) importada(s).")}catch(e){alert("Erro ao importar: "+e.message)}};r.readAsText(f);this.value=""};
 $("bPrint").onclick=function(){var o=cur();$("printview").innerHTML="<h1>Folha de Obra</h1><p><b>"+esc(o.nome)+"</b><br>"+esc(o.morada)+"<br>Início: "+esc(o.dataInicio)+" · Fim: "+esc(o.dataFim)+"</p><p>"+esc(o.notas)+"</p><h2>Materiais (totais)</h2>"+resumoHTML(o)+"<h2>Tempos</h2><table><thead><tr><th>Data</th><th>Pessoa</th><th>Nº</th><th>Início</th><th>Fim</th><th>H-homem</th><th>Tarefa</th></tr></thead><tbody>"+o.tempos.map(function(t){return"<tr><td>"+esc(t.data)+"</td><td>"+esc(t.pessoa)+"</td><td>"+t.nPessoas+"</td><td>"+esc(t.horaInicio)+"</td><td>"+esc(t.horaFim)+"</td><td>"+num(t.horasHomem)+"</td><td>"+esc(t.notas)+"</td></tr>"}).join("")+"</tbody></table>";window.print()};
